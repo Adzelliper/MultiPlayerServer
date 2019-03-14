@@ -21,7 +21,9 @@ mongoose.connect(db.mongoURI, {
 
 //Load  in Models
 require('./models/Users');
+require('./models/Players');
 var Users = mongoose.model('Users');
+var Players = mongoose.model('Players');
 
 
 var players = [];
@@ -35,6 +37,7 @@ io.on('connection', function(socket){
 
     var player = {
         id:thisPlayerId,
+        score:0,
         position:{
             v:0
             
@@ -45,19 +48,28 @@ io.on('connection', function(socket){
     socket.emit('register', {id:thisPlayerId});
     socket.broadcast.emit("spawn", {id:thisPlayerId});
     socket.broadcast.emit('requestPosition');
+    socket.broadcast.emit('requestScore');
     
 
     for(var playerID in players){
         if(playerID == thisPlayerId)
         continue;
         socket.emit('spawn', players[playerID]);
-        console.log("Sending spawn to new with ID ", thisPlayerId);
+        
+        var newPlayer = {
+            name:playerID,
+            score:0
+        }
+        new Players(newPlayer).save().then(function(play){
+            console.log("Sending data to database");
+            
+        });
     }
 
     socket.on('sendData', function(data){
         console.log(JSON.stringify(data));
         var newUser = {
-            name:data.name,
+            name:data.name
         }
         new Users(newUser).save().then(function(users){
             console.log("Sending data to database");
@@ -87,7 +99,20 @@ io.on('connection', function(socket){
     });
     
     socket.on('updatePosition', function(data){
+        
         data.id = thisPlayerId;
+        socket.broadcast.emit('updateScore', data);
         socket.broadcast.emit('updatePosition', data);
+    });
+
+    socket.on('updateScore', function(data){
+        console.log( JSON.stringify(data));
+        socket.broadcast.emit('updateScore', data);
+        
+        Players.find({}).then(function(play){
+            play.score = data.score
+            console.log(play);
+        });
+
     });
 });
