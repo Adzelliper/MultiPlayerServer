@@ -1,9 +1,11 @@
 var io = require('socket.io')(process.env.PORT||5000);
+var exphbs = require('express-handlebars');
 var shortid = require('shortid');
 var express = require('express');
 var app = express();
 var router = express.Router();
 var mongoose = require('mongoose');
+var port = process.env.PORT || 3000;
 
 var db = require('./config/database');
 
@@ -56,14 +58,7 @@ io.on('connection', function(socket){
         continue;
         socket.emit('spawn', players[playerID]);
         
-        var newPlayer = {
-            name:playerID,
-            score:0
-        }
-        new Players(newPlayer).save().then(function(play){
-            console.log("Sending data to database");
-            
-        });
+
     }
 
     socket.on('sendData', function(data){
@@ -107,12 +102,36 @@ io.on('connection', function(socket){
 
     socket.on('updateScore', function(data){
         console.log( JSON.stringify(data));
-        socket.broadcast.emit('updateScore', data);
-        
-        Players.find({}).then(function(play){
-            play.score = data.score
-            console.log(play);
+        var newPlayer = {
+            name:data.name,
+            score:data.score,
+            gamesPlayed:1
+        }
+        new Players(newPlayer).save().then(function(play){
+            console.log("Sending data to database");
         });
 
     });
+});
+
+app.engine('handlebars', exphbs({
+    defaultLayout:'main'
+}));
+app.set('view engine', 'handlebars');
+
+app.get('/', function(req,res){
+    console.log("Request made from fetch");
+    Players.find()
+    .then(function(players){
+        res.render("index", {
+            players:players
+        })
+    });
+});
+
+app.use(express.static(__dirname + '/views'));
+app.use('/', router);
+
+app.listen(port, function(){
+    console.log("server is running on port: " + port);
 });

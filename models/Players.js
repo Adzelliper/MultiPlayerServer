@@ -9,6 +9,10 @@ var PlayerSchema = new Schema({
     score:{
         type:Number,
         required: false
+    },
+    gamesPlayed:{
+        type:Number,
+        required:false
     }
 });
 

@@ -1,0 +1,19 @@
+
+<div class="jumbotron text-center">
+    <h1 class="text-center">Welcome to the User Page</h1>
+    <p>These are the current Users</p>
+    {{#each players }}
+        <div class='players'>
+            <p class="font-weight-bold">Name: {{name}}</p>
+            <p>Score: {{score}}</p>
+            <p>Games Played: {{gamesPlayed}}</p>
+            <a href='/gameentries/editgame/{{id}}' class="btn btn-dark mb-3">Edit</a>
+            <form method="POST" action="/{{id}}?_method=Delete">
+                <input type="hidden" name="_method" value="DELETE">
+                <input type="submit" value="Delete" class="btn btn-danger">
+            </form>
+        </div>
+        <br>
+    {{else}}
+    {{/each}}
+</div>
